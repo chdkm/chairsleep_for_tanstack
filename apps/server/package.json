@@ -1,0 +1,23 @@
+{
+  "name": "server",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.19.9",
+    "@prisma/client": "^6.19.2",
+    "bcryptjs": "^3.0.3",
+    "hono": "^4.11.9",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/node": "^20.11.17",
+    "prisma": "^6.19.2",
+    "tsx": "^4.7.1",
+    "typescript": "^5.8.3"
+  }
+}

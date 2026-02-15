@@ -1,0 +1,184 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                               Int       @id @default(autoincrement())
+  email                            String    @unique
+  cryptedPassword                  String?   @map("crypted_password")
+  salt                             String?
+  name                             String
+  sleepTime                        String?   @map("sleep_time")
+  favoriteGoods                    String?   @map("favorite_goods")
+  resetPasswordToken               String?   @unique @map("reset_password_token")
+  resetPasswordTokenExpiresAt      DateTime? @map("reset_password_token_expires_at")
+  resetPasswordEmailSentAt         DateTime? @map("reset_password_email_sent_at")
+  accessCountToResetPasswordPage   Int       @default(0) @map("access_count_to_reset_password_page")
+  lineLogin                        Boolean?  @map("line_login")
+  lineUserId                       String?   @map("line_user_id")
+  createdAt                        DateTime  @default(now()) @map("created_at")
+  updatedAt                        DateTime  @updatedAt @map("updated_at")
+
+  authentications Authentication[]
+  posts           Post[]
+  comments        Comment[]
+  bookmarks       Bookmark[]
+  likes           Like[]
+  items           Item[]
+  userSetting     UserSetting?
+
+  @@map("users")
+}
+
+model Authentication {
+  id         Int      @id @default(autoincrement())
+  userId     Int      @map("user_id")
+  provider   String
+  uid        String
+  lineUserId String?  @map("line_user_id")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, uid])
+  @@unique([provider, lineUserId])
+  @@index([userId])
+  @@map("authentications")
+}
+
+model Post {
+  id         Int      @id @default(autoincrement())
+  title      String
+  content    String   @db.Text
+  userId     Int?     @map("user_id")
+  image      String?
+  prepare    String?
+  care       String?
+  likesCount Int      @default(0) @map("likes_count")
+  userUid    String?  @map("user_uid")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  user      User?      @relation(fields: [userId], references: [id])
+  comments  Comment[]
+  bookmarks Bookmark[]
+  likes     Like[]
+  items     Item[]
+  postTags  PostTag[]
+
+  @@index([userId])
+  @@map("posts")
+}
+
+model Item {
+  id            Int      @id @default(autoincrement())
+  name          String?
+  price         Int?
+  imageUrl      String?  @map("image_url")
+  rakutenItemId String?  @map("rakuten_item_id")
+  postId        Int      @map("post_id")
+  userId        Int      @map("user_id")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([postId])
+  @@index([userId])
+  @@map("items")
+}
+
+model Comment {
+  id        Int      @id @default(autoincrement())
+  userId    Int?     @map("user_id")
+  postId    Int?     @map("post_id")
+  content   String?  @db.Text
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User? @relation(fields: [userId], references: [id])
+  post Post? @relation(fields: [postId], references: [id])
+
+  @@index([userId])
+  @@index([postId])
+  @@map("comments")
+}
+
+model Bookmark {
+  id        Int      @id @default(autoincrement())
+  userId    Int?     @map("user_id")
+  postId    Int?     @map("post_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User? @relation(fields: [userId], references: [id])
+  post Post? @relation(fields: [postId], references: [id])
+
+  @@unique([userId, postId])
+  @@index([userId])
+  @@index([postId])
+  @@map("bookmarks")
+}
+
+model Like {
+  id        Int      @id @default(autoincrement())
+  userId    Int?     @map("user_id")
+  postId    Int?     @map("post_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User? @relation(fields: [userId], references: [id])
+  post Post? @relation(fields: [postId], references: [id])
+
+  @@unique([userId, postId])
+  @@index([userId])
+  @@index([postId])
+  @@map("likes")
+}
+
+model UserSetting {
+  id               Int      @id @default(autoincrement())
+  userId           Int      @unique @map("user_id")
+  lineNotification Boolean? @map("line_notification")
+  lineUserId       String?  @map("line_user_id")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_settings")
+}
+
+model ItemTag {
+  id        Int       @id @default(autoincrement())
+  name      String?   @unique
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  
+  postTags  PostTag[]
+
+  @@map("item_tags")
+}
+
+model PostTag {
+  id        Int      @id @default(autoincrement())
+  postId    Int      @map("post_id")
+  itemTagId Int      @map("item_tag_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  post    Post    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  itemTag ItemTag @relation(fields: [itemTagId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, itemTagId])
+  @@index([postId])
+  @@index([itemTagId])
+  @@map("post_tags")
+}

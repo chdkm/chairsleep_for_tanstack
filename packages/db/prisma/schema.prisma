@@ -1,0 +1,176 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = "postgresql://postgres:password@localhost:5432/app_development"
+}
+
+model User {
+  id                                  BigInt    @id @default(autoincrement())
+  email                               String    @unique
+  crypted_password                    String?
+  salt                                String?
+  name                                String
+  created_at                          DateTime  @default(now())
+  updated_at                          DateTime  @updatedAt
+  sleep_time                          String?
+  favorite_goods                      String?
+  reset_password_token                String?   @unique
+  reset_password_token_expires_at     DateTime?
+  reset_password_email_sent_at        DateTime?
+  access_count_to_reset_password_page Int       @default(0)
+  line_login                          Boolean?
+  line_user_id                        String?
+
+  authentications Authentication[]
+  bookmarks       Bookmark[]
+  comments        Comment[]
+  items           Item[]
+  likes           Like[]
+  posts           Post[]
+  user_setting    UserSetting?
+
+  @@map("users")
+}
+
+model Authentication {
+  id           BigInt   @id @default(autoincrement())
+  user_id      BigInt
+  provider     String
+  uid          String
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+  line_user_id String?
+  user         User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([provider, line_user_id])
+  @@index([provider, uid])
+  @@index([user_id])
+  @@map("authentications")
+}
+
+model Bookmark {
+  id         BigInt   @id @default(autoincrement())
+  user_id    BigInt?
+  post_id    BigInt?
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  user       User?    @relation(fields: [user_id], references: [id])
+  post       Post?    @relation(fields: [post_id], references: [id])
+
+  @@unique([user_id, post_id])
+  @@index([post_id])
+  @@index([user_id])
+  @@map("bookmarks")
+}
+
+model Comment {
+  id         BigInt   @id @default(autoincrement())
+  user_id    BigInt?
+  post_id    BigInt?
+  content    String?
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  user       User?    @relation(fields: [user_id], references: [id])
+  post       Post?    @relation(fields: [post_id], references: [id])
+
+  @@index([post_id])
+  @@index([user_id])
+  @@map("comments")
+}
+
+model ItemTag {
+  id         BigInt    @id @default(autoincrement())
+  name       String?   @unique
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+  post_tags  PostTag[]
+
+  @@map("item_tags")
+}
+
+model Item {
+  id              BigInt   @id @default(autoincrement())
+  name            String?
+  price           Int?
+  image_url       String?
+  rakuten_item_id String?
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+  post_id         BigInt
+  user_id         BigInt
+  post            Post     @relation(fields: [post_id], references: [id])
+  user            User     @relation(fields: [user_id], references: [id])
+
+  @@index([post_id])
+  @@index([user_id])
+  @@map("items")
+}
+
+model Like {
+  id         BigInt   @id @default(autoincrement())
+  user_id    BigInt?
+  post_id    BigInt?
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  user       User?    @relation(fields: [user_id], references: [id])
+  post       Post?    @relation(fields: [post_id], references: [id])
+
+  @@unique([user_id, post_id])
+  @@index([post_id])
+  @@index([user_id])
+  @@map("likes")
+}
+
+model PostTag {
+  id          BigInt   @id @default(autoincrement())
+  post_id     BigInt
+  item_tag_id BigInt
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+  post        Post     @relation(fields: [post_id], references: [id])
+  item_tag    ItemTag  @relation(fields: [item_tag_id], references: [id])
+
+  @@unique([post_id, item_tag_id])
+  @@index([item_tag_id])
+  @@index([post_id])
+  @@map("post_tags")
+}
+
+model Post {
+  id          BigInt     @id @default(autoincrement())
+  title       String
+  content     String
+  user_id     BigInt?
+  created_at  DateTime   @default(now())
+  updated_at  DateTime   @updatedAt
+  image       String?
+  prepare     String?
+  care        String?
+  likes_count Int        @default(0)
+  user_uid    String?
+  bookmarks   Bookmark[]
+  comments    Comment[]
+  items       Item[]
+  likes       Like[]
+  post_tags   PostTag[]
+  user        User?      @relation(fields: [user_id], references: [id])
+
+  @@index([user_id])
+  @@map("posts")
+}
+
+model UserSetting {
+  id                BigInt   @id @default(autoincrement())
+  user_id           BigInt   @unique
+  line_notification Boolean?
+  line_user_id      String?
+  created_at        DateTime @default(now())
+  updated_at        DateTime @updatedAt
+  user              User     @relation(fields: [user_id], references: [id])
+
+  @@index([user_id])
+  @@map("user_settings")
+}
