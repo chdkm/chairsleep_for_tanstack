@@ -4,25 +4,60 @@ import { authMiddleware } from '../middleware/auth.js'
 
 const items = new Hono<{ Variables: { user: { id: number } } }>()
 
-// Placeholder for Rakuten API Client
-const searchRakuten = async (keyword: string) => {
-    // In a real app, use Rakuten Webservice SDK or fetch logic here
-    return [
-        {
-            name: `Sample Item matching ${keyword}`,
-            price: 1000,
-            imageUrl: 'https://placehold.co/200',
-            rakutenItemId: 'item_123'
+const RAKUTEN_API_KEY = process.env.RAKUTEN_API_KEY || ''
+const RAKUTEN_API_URL = 'https://app.rakuten.co.jp/services/api/IchibaItem/Search/20220601'
+
+interface RakutenItem {
+    itemName: string
+    itemPrice: number
+    mediumImageUrls: { imageUrl: string }[]
+    itemCode: string
+    itemUrl: string
+    shopName: string
+}
+
+interface RakutenResponse {
+    Items: { Item: RakutenItem }[]
+    count: number
+    page: number
+    pageCount: number
+}
+
+const searchRakuten = async (keyword?: string, itemCode?: string) => {
+    const params = new URLSearchParams({
+        format: 'json',
+        applicationId: RAKUTEN_API_KEY,
+    })
+    if (keyword) params.set('keyword', keyword)
+    if (itemCode) params.set('itemCode', itemCode)
+
+    const res = await fetch(`${RAKUTEN_API_URL}?${params.toString()}`)
+    if (!res.ok) {
+        console.error('Rakuten API error:', res.status, await res.text())
+        return []
+    }
+
+    const data = await res.json() as RakutenResponse
+    return (data.Items || []).map((entry) => {
+        const item = entry.Item
+        return {
+            name: item.itemName,
+            price: item.itemPrice,
+            imageUrl: item.mediumImageUrls?.[0]?.imageUrl || '',
+            rakutenItemId: item.itemCode,
+            itemUrl: item.itemUrl,
+            shopName: item.shopName,
         }
-    ]
+    })
 }
 
 items.get('/search', async (c) => {
     const keyword = c.req.query('keyword')
-    if (!keyword) return c.json({ items: [] })
+    const itemCode = c.req.query('itemCode')
+    if (!keyword && !itemCode) return c.json({ items: [] })
 
-    const items = await searchRakuten(keyword)
-    return c.json({ items })
+    const results = await searchRakuten(keyword, itemCode)
+    return c.json({ items: results })
 })
 
 items.post('/', authMiddleware, async (c) => {
