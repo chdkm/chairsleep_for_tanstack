@@ -88,4 +88,15 @@ cd apps/server && npm run dev
 - **Backend**: Hono, Node.js
 - **Database**: PostgreSQL, Prisma (ORM)
 - **Auth**: JWT, LINE OAuth 2.0
-- **Tools**: Vite, TypeScript
+- **Tools**: Vite, TypeScript, Agent Skills
+
+## Agent Skills (エージェントスキル)
+
+このプロジェクトでは、AI エージェントが開発を補助し、コード品質を維持するための「エージェントスキル」を導入しています。
+
+### 導入済みのスキル
+- **vercel-react-best-practices**: Vercel エンジニアリングによる React および Next.js のパフォーマンス最適化ガイドラインです。
+    - **主な内容**: ウォーターフォールの排除、バンドルサイズの最適化、SSR のパフォーマンス改善、再レンダリングの最適化など、57 のルールが含まれています。
+    - **活用方法**: エージェントがコードの新規作成やリファクタリングを行う際に、これらのベストプラクティスを自動的に参照して適用します。
+
+スキルは `.agents/skills` ディレクトリに格納されており、個別のルールや詳細は各スキルの `SKILL.md` または `AGENTS.md` で確認できます。
