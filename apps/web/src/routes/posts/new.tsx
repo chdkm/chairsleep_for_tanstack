@@ -10,20 +10,21 @@ function CreatePost() {
     const router = useRouter()
     const [title, setTitle] = useState('')
     const [content, setContent] = useState('')
+    const [error, setError] = useState('')
     const [isLoading, setIsLoading] = useState(false)
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         setIsLoading(true)
+        setError('')
         try {
             await apiFetch('/posts', {
                 method: 'POST',
                 body: JSON.stringify({ title, content }),
             })
             router.navigate({ to: '/posts' })
-        } catch (err) {
-            alert('投稿に失敗しました。ログインしているか確認してください。')
-            router.navigate({ to: '/login' })
+        } catch (err: any) {
+            setError(err.message || '投稿に失敗しました。ログインしているか確認してください。')
         } finally {
             setIsLoading(false)
         }
@@ -37,6 +38,11 @@ function CreatePost() {
             </div>
 
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-8">
+                {error && (
+                    <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 text-sm rounded">
+                        {error}
+                    </div>
+                )}
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">タイトル</label>

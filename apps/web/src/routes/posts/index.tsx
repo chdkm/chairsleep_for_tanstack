@@ -1,10 +1,21 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { apiFetch } from '../../utils/api'
+import type { User } from '../../context/AuthContext'
+
+type Post = {
+    id: number
+    title: string
+    content: string
+    image: string | null
+    likesCount: number
+    createdAt: string
+    user: Pick<User & object, 'name'> | null
+}
 
 export const Route = createFileRoute('/posts/')({
     loader: async () => {
         const data = await apiFetch('/posts')
-        return data
+        return data as { posts: Post[] }
     },
     component: PostsIndex,
 })
@@ -28,10 +39,9 @@ function PostsIndex() {
             </div>
 
             <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-                {posts.map((post: any) => (
+                {posts.map((post) => (
                     <article key={post.id} className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-shadow duration-300 border border-gray-100 overflow-hidden flex flex-col h-full">
-                        <Link to={`/posts/${post.id}`} className="block relative aspect-video bg-gray-100 overflow-hidden group">
-                            {/* Placeholder image logic */}
+                        <Link to="/posts/$id" params={{ id: String(post.id) }} className="block relative aspect-video bg-gray-100 overflow-hidden group">
                             <img
                                 src={post.image || `https://placehold.co/600x400/e2e8f0/94a3b8?text=${encodeURIComponent(post.title.charAt(0))}`}
                                 alt={post.title}
@@ -44,7 +54,7 @@ function PostsIndex() {
                                 Category
                             </div>
                             <h2 className="text-xl font-bold text-gray-900 mb-3 line-clamp-2 leading-tight">
-                                <Link to={`/posts/${post.id}`} className="hover:text-blue-600 transition-colors">
+                                <Link to="/posts/$id" params={{ id: String(post.id) }} className="hover:text-blue-600 transition-colors">
                                     {post.title}
                                 </Link>
                             </h2>

@@ -1,8 +1,7 @@
 import { createMiddleware } from 'hono/factory'
 import { getCookie } from 'hono/cookie'
 import { verify } from 'hono/jwt'
-
-const JWT_SECRET = process.env.JWT_SECRET || 'secret'
+import { JWT_SECRET } from '../utils.js'
 
 export const authMiddleware = createMiddleware(async (c, next) => {
     const token = getCookie(c, 'token')

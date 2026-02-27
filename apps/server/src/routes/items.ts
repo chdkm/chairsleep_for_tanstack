@@ -1,6 +1,7 @@
 import { Hono } from 'hono'
 import { prisma } from '../db.js'
 import { authMiddleware } from '../middleware/auth.js'
+import { serializeBigInt } from '../utils.js'
 
 const items = new Hono<{ Variables: { user: { id: number } } }>()
 
@@ -81,10 +82,7 @@ items.post('/', authMiddleware, async (c) => {
         }
     })
 
-    const serialized = JSON.stringify(item, (key, value) =>
-        typeof value === 'bigint' ? value.toString() : value
-    )
-    return c.json({ item: JSON.parse(serialized) })
+    return c.json({ item: serializeBigInt(item) })
 })
 
 items.delete('/:id', authMiddleware, async (c) => {
