@@ -1,20 +1,16 @@
 import { Hono } from 'hono'
 import { prisma } from '../db.js'
 import { authMiddleware } from '../middleware/auth.js'
+import { serializeBigInt } from '../utils.js'
 
 const posts = new Hono<{ Variables: { user: { id: number } } }>()
 
 posts.get('/', async (c) => {
-    // Simple pagination or all posts
     const posts = await prisma.post.findMany({
         include: { user: true, items: true },
         orderBy: { createdAt: 'desc' }
     })
-    // Handle BigInt serialization
-    const serialized = JSON.stringify(posts, (key, value) =>
-        typeof value === 'bigint' ? value.toString() : value
-    )
-    return c.json({ posts: JSON.parse(serialized) })
+    return c.json({ posts: serializeBigInt(posts) })
 })
 
 posts.post('/', authMiddleware, async (c) => {
@@ -32,10 +28,7 @@ posts.post('/', authMiddleware, async (c) => {
         }
     })
 
-    const serialized = JSON.stringify(post, (key, value) =>
-        typeof value === 'bigint' ? value.toString() : value
-    )
-    return c.json({ post: JSON.parse(serialized) })
+    return c.json({ post: serializeBigInt(post) })
 })
 
 posts.get('/:id', async (c) => {
@@ -47,10 +40,7 @@ posts.get('/:id', async (c) => {
 
     if (!post) return c.json({ error: 'Post not found' }, 404)
 
-    const serialized = JSON.stringify(post, (key, value) =>
-        typeof value === 'bigint' ? value.toString() : value
-    )
-    return c.json({ post: JSON.parse(serialized) })
+    return c.json({ post: serializeBigInt(post) })
 })
 
 posts.delete('/:id', authMiddleware, async (c) => {

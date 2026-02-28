@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react'
 import { apiFetch } from '../utils/api'
 
-type User = {
+export type User = {
     id: number
     email: string
     name: string

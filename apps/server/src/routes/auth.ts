@@ -3,9 +3,15 @@ import { prisma } from '../db.js'
 import { getCookie, setCookie } from 'hono/cookie'
 import { sign, verify } from 'hono/jwt'
 import { hash, compare } from 'bcryptjs'
+import { JWT_SECRET } from '../utils.js'
 
 const auth = new Hono()
-const JWT_SECRET = process.env.JWT_SECRET || 'secret'
+
+/** JWT を発行し cookie にセットする共通ヘルパー */
+async function setAuthCookie(c: any, userId: number, email: string) {
+    const token = await sign({ id: userId, email }, JWT_SECRET)
+    setCookie(c, 'token', token, { httpOnly: true, path: '/' })
+}
 
 auth.post('/signup', async (c) => {
     const { email, password, name } = await c.req.json()
@@ -21,8 +27,7 @@ auth.post('/signup', async (c) => {
                 salt: 'bcrypt', // Placeholder for compatibility
             },
         })
-        const token = await sign({ id: user.id, email: user.email }, JWT_SECRET)
-        setCookie(c, 'token', token, { httpOnly: true, path: '/' })
+        await setAuthCookie(c, user.id, user.email)
         return c.json({ user: { id: user.id, email: user.email, name: user.name } })
     } catch (e) {
         return c.json({ error: 'User already exists' }, 400)
@@ -39,8 +44,7 @@ auth.post('/login', async (c) => {
     const valid = await compare(password, user.cryptedPassword)
     if (!valid) return c.json({ error: 'Invalid credentials' }, 401)
 
-    const token = await sign({ id: user.id, email: user.email }, JWT_SECRET)
-    setCookie(c, 'token', token, { httpOnly: true, path: '/' })
+    await setAuthCookie(c, user.id, user.email)
     return c.json({ user: { id: user.id, email: user.email, name: user.name } })
 })
 
@@ -158,8 +162,7 @@ auth.get('/line/callback', async (c) => {
         }
 
         // Issue JWT and redirect to frontend
-        const token = await sign({ id: user.id, email: user.email }, JWT_SECRET)
-        setCookie(c, 'token', token, { httpOnly: true, path: '/' })
+        await setAuthCookie(c, user.id, user.email)
         return c.redirect(`${FRONTEND_URL}/line-callback`)
     } catch (e) {
         console.error('LINE auth error:', e)
