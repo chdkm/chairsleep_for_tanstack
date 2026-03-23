@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useAuth } from '../context/AuthContext'
+import { StatsCharts } from '../components/StatsCharts'
 
 export const Route = createFileRoute('/')({
   component: Home,
@@ -94,6 +95,14 @@ function Home() {
               <div className="text-gray-500 font-medium">ユーザー</div>
             </div>
           </div>
+
+          <div className="mt-16 text-center">
+            <h2 className="text-3xl font-extrabold text-gray-900 mb-4 tracking-tight">ChairSleepインサイト</h2>
+            <p className="text-gray-500 max-w-2xl mx-auto text-lg mb-8">
+              コミュニティのデータから、あなたにぴったりの睡眠方法のヒントを見つけましょう。
+            </p>
+          </div>
+          <StatsCharts />
         </div>
       </section>
 
