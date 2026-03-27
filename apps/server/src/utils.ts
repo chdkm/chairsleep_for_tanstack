@@ -5,6 +5,8 @@ export const JWT_SECRET = process.env.JWT_SECRET || 'secret'
  * Prisma は id 等に BigInt を返すことがあるため、文字列に変換して渡す。
  */
 export function serializeBigInt<T>(data: T): T {
+    if (data === undefined) return data
+
     return JSON.parse(
         JSON.stringify(data, (_, value) =>
             typeof value === 'bigint' ? value.toString() : value
